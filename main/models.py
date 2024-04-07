@@ -4,9 +4,29 @@ class Feature(models.Model):
     feature_id = models.IntegerField(unique=True)
 
 class Banner(models.Model):
-    feature = models.ForeignKey(Feature, on_delete=models.CASCADE)
-    content = models.JSONField()  # '{"title": "some_title", "text": "some_text", "url": "some_url"}'
-    is_active = models.BooleanField(default=True)
+    feature = models.ForeignKey(
+        Feature, 
+        on_delete=models.CASCADE)
+    
+    title = models.CharField(
+        default="title", 
+        max_length=25, 
+        blank=True, 
+        null=True)
+    
+    description = models.CharField(
+        default="description", 
+        max_length=250, 
+        blank=True, 
+        null=True)
+    
+    url = models.URLField(
+        default="https://www.avito.ru/я-вас-люблю", 
+        blank=True, 
+        null=True)
+    
+    is_active = models.BooleanField(
+        default=True)
 
 class Tag(models.Model):
     tag_id = models.IntegerField(unique=True)

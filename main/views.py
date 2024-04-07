@@ -1,12 +1,24 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
+from . import models
+
 
 @csrf_exempt
 def user_banner_view(request):
     if request.method == 'GET':
+        tag_id = request.GET.get("tag_id", None)
+        feature_id = request.GET.get("feature_id", None)
+
+        banner = models.BannerTag.objects.filter(
+            tag_id=tag_id,
+            feature_id=feature_id
+        ).select_related("banner", "tag", "feature")
+
         return JsonResponse({
-            "content":"Получение баннера для пользователя"
+            "title": banner.title, 
+            "text": banner.description, 
+            "url": banner.url
             }, status=200)
     else:
         return JsonResponse({
