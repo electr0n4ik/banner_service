@@ -5,9 +5,7 @@ class Feature(models.Model):
     feature_id = models.IntegerField(unique=True)
 
 class Banner(models.Model):
-    feature = models.ForeignKey(
-        Feature, 
-        on_delete=models.CASCADE)
+    feature = models.ForeignKey(Feature, on_delete=models.CASCADE)
     
     title = models.CharField(
         default="title", 
@@ -26,8 +24,10 @@ class Banner(models.Model):
         blank=True, 
         null=True)
     
-    is_active = models.BooleanField(
-        default=True)
+    is_active = models.BooleanField(default=True)
+    
+    created = models.DateTimeField(auto_now_add=True)
+    modified = models.DateTimeField(auto_now=True)
 
 class Tag(models.Model):
     tag_id = models.IntegerField(unique=True)

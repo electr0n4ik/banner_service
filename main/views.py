@@ -1,4 +1,5 @@
 from django.http import JsonResponse
+from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
 
 from . import models
@@ -7,8 +8,8 @@ from . import models
 @csrf_exempt
 def user_banner_view(request):
     if request.method == 'GET':
-        tag_id = request.GET.get("tag_id", None)
-        feature_id = request.GET.get("feature_id", None)
+        tag_id = request.GET.get("tag_id", None)  #TODO: required: true  -> 400
+        feature_id = request.GET.get("feature_id", None)  #TODO: required: true -> 400
 
         banner_tags_by_tag = models.BannerTag.objects.filter(tag_id=tag_id)
         filtered_banner_tags = banner_tags_by_tag.filter(
@@ -37,9 +38,35 @@ def user_banner_view(request):
 @csrf_exempt
 def banners_view(request):
     if request.method == 'GET':
-        return JsonResponse({
-            "content":"Получение всех баннеров c фильтрацией по фиче и/или тегу"
-            }, status=200)
+        tag_id = request.GET.get("tag_id", None)
+        feature_id = request.GET.get("feature_id", None)
+        limit = int(request.GET.get('limit', 100))
+        offset = int(request.GET.get('offset', 0))
+
+        banner_tags_by_tag = models.BannerTag.objects.filter(tag_id=tag_id)
+        filtered_banner_tags = banner_tags_by_tag.filter(
+            banner__feature_id=feature_id)
+        try:
+            all_objects = models.Banner.objects.get(
+                bannertag__in=filtered_banner_tags)
+        except models.Banner.DoesNotExist:
+            all_objects = None
+
+        paginator = Paginator(all_objects, limit)
+        current_page = (offset // limit) + 1
+
+        try:
+            page = paginator.page(current_page)
+        except:
+            return JsonResponse([], safe=False)
+
+        objects_on_page = page.object_list
+        response_data = [{'id': obj.id, 'name': obj.name} for obj in objects_on_page]
+
+        return JsonResponse(
+            response_data, 
+            status=200)
+    
     elif request.method == 'POST':
         return JsonResponse({
             "content":"Создание нового баннера"
