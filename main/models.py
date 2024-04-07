@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class Feature(models.Model):
     feature_id = models.IntegerField(unique=True)
 
@@ -34,3 +35,6 @@ class Tag(models.Model):
 class BannerTag(models.Model):
     banner = models.ForeignKey(Banner, on_delete=models.CASCADE)
     tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('banner', 'tag')
