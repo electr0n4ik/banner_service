@@ -1,3 +1,5 @@
+import json
+
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
@@ -43,29 +45,15 @@ def banners_view(request):
         limit = int(request.GET.get('limit', 100))
         offset = int(request.GET.get('offset', 0))
 
+        banners = models.Banner.objects.all()
+
         if tag_id:
-            banner_tags_by_tag = models.BannerTag.objects.filter(
-                tag_id=tag_id).select_related("banner")
-        else:
-            banner_tags_by_tag = models.BannerTag.objects.all()
+            banners = banners.filter(tag_ids__contains=[int(tag_id)])
 
-        if feature_id and tag_id:
-            filtered_banner_tags = banner_tags_by_tag.filter(
-            banner__feature_id=feature_id)
-        elif feature_id and not tag_id:
-            all_objects = models.Banner.objects.filter(
-                id=feature_id)
+        if feature_id:
+            banners = banners.filter(feature_id=int(feature_id))
 
-        try:
-            if (feature_id and tag_id) or (tag_id and not feature_id):
-                all_objects = models.Banner.objects.filter(
-                    bannertag__in=filtered_banner_tags)  # .order_by('id')
-            elif not feature_id and not tag_id:
-                all_objects = models.Banner.objects.all()
-        except models.Banner.DoesNotExist:
-            all_objects = None
-
-        paginator = Paginator(all_objects, limit)
+        paginator = Paginator(banners, limit)
         current_page = (offset // limit) + 1
 
         try:
@@ -77,11 +65,12 @@ def banners_view(request):
 
         objects_on_page = page.object_list
         response_data = [f"count: {len(objects_on_page)}"]
+        
         for obj in objects_on_page:
-            banner_tags_for_obj = banner_tags_by_tag.filter(banner=obj.id)
+
             response_data.append({
                 "banner_id": obj.id,
-                "tag_ids": [tag.tag_id for tag in banner_tags_for_obj],
+                "tag_ids": obj.tag_ids,
                 "feature_id": obj.feature_id,
                 "content": {
                     "title": obj.title,
@@ -92,20 +81,6 @@ def banners_view(request):
                 "created_at": obj.created,
                 "updated_at": obj.modified
             })
-        
-        # response_data = [{"banner_id": obj.id, 
-        #                   "tag_ids": [obj.tag.id for obj in banner_tags_by_tag\
-        #                               .filter(banner=obj.id)],
-        #                   "feature_id": obj.title,
-        #                   "content": {
-        #                       "title": obj.title, 
-        #                       "text": obj.description, 
-        #                       "url": obj.url
-        #                   },
-        #                   "is_active": obj.is_active,
-        #                   "created_at": obj.created,
-        #                   "updated_at": obj.modified
-        #                   } for obj in objects_on_page]
 
         return JsonResponse(
             response_data,
@@ -113,9 +88,47 @@ def banners_view(request):
             status=200)
     
     elif request.method == 'POST':
+        # {
+        #     "tag_ids": [1, 2],
+
+        #     "feature_id": 1,
+
+        #     "content": {
+        #         "title": "new_title", 
+        #         "text": "new_text", 
+        #         "url": "new_url"
+        #     },
+
+        #     "is_active": true
+        # }
+        data = json.loads(request.body.decode('utf-8'))
+        tag_ids = data.get("tag_ids")
+        feature_id = data.get("feature_id")
+        content = data.get("content")
+        is_active = data.get("is_active")
+
+        feature, _ = models.Feature.objects.get_or_create(
+            feature_id=feature_id)
+
+        banner = models.Banner.objects.create(
+            feature=feature,
+            title=content.get("title"),
+            description=content.get("text"),
+            url=content.get("url"),
+            is_active=is_active
+        )
+
+        for tag_id in tag_ids:
+            tag, _ = models.Tag.objects.get_or_create(tag_id=tag_id)
+            models.BannerTag.objects.create(banner=banner, tag=tag)
+
         return JsonResponse({
-            "content":"Создание нового баннера"
-            }, status=201)
+            "banner_id": banner.id
+            },
+            status=201)
+    
+        #IntegrityError если нарушена уникальность
+    
     else:
         return JsonResponse({
             'error': 'Method not allowed'
