@@ -11,22 +11,33 @@ from . import models
 @csrf_exempt
 def user_banner_view(request):
     if request.method == 'GET':
-        tag_id = request.GET.get("tag_id", None)  #TODO: required: true  -> 400
-        feature_id = request.GET.get("feature_id", None)  #TODO: required: true -> 400
+        tag_id = request.GET.get("tag_id", None)
+        feature_id = request.GET.get("feature_id", None)
+        
+        if not tag_id or not feature_id:
+            err_text = "Does not exist tag_id" if not tag_id \
+                else "Does not exist feature_id" if not feature_id \
+                else "Does not exist ids"
+            return JsonResponse(
+                    {"Incorrect data": err_text},
+                    safe=False,
+                    status=400)
+    
+        banner = models.Banner.objects.all()
 
-        banner_tags_by_tag = models.BannerTag.objects.filter(tag_id=tag_id)
-        filtered_banner_tags = banner_tags_by_tag.filter(
-            banner__feature_id=feature_id)
-        try:
-            banner = models.Banner.objects.get(
-                bannertag__in=filtered_banner_tags)
-        except models.Banner.DoesNotExist:
-            banner = None
+        if tag_id:
+            banner = banner.filter(tag_ids__contains=[int(tag_id)])
+
+        if feature_id:
+            banner = banner.filter(feature_id=int(feature_id))
+        for i in banner:
+            
+            print(i)
         if banner:
             return JsonResponse({
-                "title": banner.title, 
-                "text": banner.description, 
-                "url": banner.url
+                "title": banner.first().title, 
+                "text": banner.first().description, 
+                "url": banner.first().url
                 }, status=200)
         else:
             return JsonResponse({
@@ -61,7 +72,7 @@ def banners_view(request):
             page = paginator.page(current_page)
         except:
             return JsonResponse([
-                "Добавить сюда вывод одного баннера! Или нет баннера"],
+                "Добавить сюда вывод одного баннера! Или нет баннера"],  #TODO:
                 safe=False)
 
         objects_on_page = page.object_list
