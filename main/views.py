@@ -107,15 +107,14 @@ def banners_view(request):
             )
 
             return JsonResponse({
+                "method": request.method,
                 "banner_id": banner.id
                 },
                 status=201)
         
         except IntegrityError as e:
             return JsonResponse(
-                # "Incorrect data!",
-                {1: f"{e}"},
-                # safe=False,
+                {"Incorrect data, exception:": f"{e}"},
                 status=400)
     
     else:
