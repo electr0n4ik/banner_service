@@ -47,18 +47,21 @@ def banners_view(request):
             banner_tags_by_tag = models.BannerTag.objects.filter(
                 tag_id=tag_id).select_related("banner")
         else:
-            banner_tags_by_tag = models.BannerTag.objects.all()\
-                .select_related("banner")
-            
-        if feature_id:
+            banner_tags_by_tag = models.BannerTag.objects.all()
+
+        if feature_id and tag_id:
             filtered_banner_tags = banner_tags_by_tag.filter(
             banner__feature_id=feature_id)
-        else:
-            filtered_banner_tags = banner_tags_by_tag
+        elif feature_id and not tag_id:
+            all_objects = models.Banner.objects.filter(
+                id=feature_id)
 
         try:
-            all_objects = models.Banner.objects.filter(
-                bannertag__in=filtered_banner_tags)  # .order_by('id')
+            if (feature_id and tag_id) or (tag_id and not feature_id):
+                all_objects = models.Banner.objects.filter(
+                    bannertag__in=filtered_banner_tags)  # .order_by('id')
+            elif not feature_id and not tag_id:
+                all_objects = models.Banner.objects.all()
         except models.Banner.DoesNotExist:
             all_objects = None
 
@@ -73,19 +76,36 @@ def banners_view(request):
                 safe=False)
 
         objects_on_page = page.object_list
-        response_data = [{"banner_id": obj.id, 
-                          "tag_ids": [obj.tag.id for obj in banner_tags_by_tag\
-                                      .filter(banner=obj.id)],
-                          "feature_id": obj.title,
-                          "content": {
-                              "title": obj.title, 
-                              "text": obj.description, 
-                              "url": obj.url
-                          },
-                          "is_active": obj.is_active,
-                          "created_at": obj.created,
-                          "updated_at": obj.modified
-                          } for obj in objects_on_page]
+        response_data = [f"count: {len(objects_on_page)}"]
+        for obj in objects_on_page:
+            banner_tags_for_obj = banner_tags_by_tag.filter(banner=obj.id)
+            response_data.append({
+                "banner_id": obj.id,
+                "tag_ids": [tag.tag_id for tag in banner_tags_for_obj],
+                "feature_id": obj.feature_id,
+                "content": {
+                    "title": obj.title,
+                    "text": obj.description,
+                    "url": obj.url
+                },
+                "is_active": obj.is_active,
+                "created_at": obj.created,
+                "updated_at": obj.modified
+            })
+        
+        # response_data = [{"banner_id": obj.id, 
+        #                   "tag_ids": [obj.tag.id for obj in banner_tags_by_tag\
+        #                               .filter(banner=obj.id)],
+        #                   "feature_id": obj.title,
+        #                   "content": {
+        #                       "title": obj.title, 
+        #                       "text": obj.description, 
+        #                       "url": obj.url
+        #                   },
+        #                   "is_active": obj.is_active,
+        #                   "created_at": obj.created,
+        #                   "updated_at": obj.modified
+        #                   } for obj in objects_on_page]
 
         return JsonResponse(
             response_data,
