@@ -3,6 +3,7 @@ import json
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
+from django.db import IntegrityError
 
 from . import models
 
@@ -65,7 +66,7 @@ def banners_view(request):
 
         objects_on_page = page.object_list
         response_data = [f"count: {len(objects_on_page)}"]
-        
+
         for obj in objects_on_page:
 
             response_data.append({
@@ -88,46 +89,34 @@ def banners_view(request):
             status=200)
     
     elif request.method == 'POST':
-        # {
-        #     "tag_ids": [1, 2],
 
-        #     "feature_id": 1,
-
-        #     "content": {
-        #         "title": "new_title", 
-        #         "text": "new_text", 
-        #         "url": "new_url"
-        #     },
-
-        #     "is_active": true
-        # }
         data = json.loads(request.body.decode('utf-8'))
         tag_ids = data.get("tag_ids")
         feature_id = data.get("feature_id")
         content = data.get("content")
         is_active = data.get("is_active")
 
-        feature, _ = models.Feature.objects.get_or_create(
-            feature_id=feature_id)
+        try:
+            banner = models.Banner.objects.create(
+                feature_id=feature_id,\
+                tag_ids=tag_ids,
+                title=content.get("title"),
+                description=content.get("text"),
+                url=content.get("url"),
+                is_active=is_active
+            )
 
-        banner = models.Banner.objects.create(
-            feature=feature,
-            title=content.get("title"),
-            description=content.get("text"),
-            url=content.get("url"),
-            is_active=is_active
-        )
-
-        for tag_id in tag_ids:
-            tag, _ = models.Tag.objects.get_or_create(tag_id=tag_id)
-            models.BannerTag.objects.create(banner=banner, tag=tag)
-
-        return JsonResponse({
-            "banner_id": banner.id
-            },
-            status=201)
-    
-        #IntegrityError если нарушена уникальность
+            return JsonResponse({
+                "banner_id": banner.id
+                },
+                status=201)
+        
+        except IntegrityError as e:
+            return JsonResponse(
+                # "Incorrect data!",
+                {1: f"{e}"},
+                # safe=False,
+                status=400)
     
     else:
         return JsonResponse({

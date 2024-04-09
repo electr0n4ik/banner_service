@@ -3,7 +3,7 @@ from django.contrib.postgres.fields import ArrayField
 
 
 class Banner(models.Model):
-    feature_id = models.IntegerField(unique=True)
+    feature_id = models.IntegerField()
     tag_ids = ArrayField(
         models.IntegerField(unique=True))
     title = models.CharField(
