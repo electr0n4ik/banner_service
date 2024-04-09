@@ -43,12 +43,22 @@ def banners_view(request):
         limit = int(request.GET.get('limit', 100))
         offset = int(request.GET.get('offset', 0))
 
-        banner_tags_by_tag = models.BannerTag.objects.filter(tag_id=tag_id)
-        filtered_banner_tags = banner_tags_by_tag.filter(
+        if tag_id:
+            banner_tags_by_tag = models.BannerTag.objects.filter(
+                tag_id=tag_id).select_related("banner")
+        else:
+            banner_tags_by_tag = models.BannerTag.objects.all()\
+                .select_related("banner")
+            
+        if feature_id:
+            filtered_banner_tags = banner_tags_by_tag.filter(
             banner__feature_id=feature_id)
+        else:
+            filtered_banner_tags = banner_tags_by_tag
+
         try:
-            all_objects = models.Banner.objects.get(
-                bannertag__in=filtered_banner_tags)
+            all_objects = models.Banner.objects.filter(
+                bannertag__in=filtered_banner_tags)  # .order_by('id')
         except models.Banner.DoesNotExist:
             all_objects = None
 
@@ -58,13 +68,28 @@ def banners_view(request):
         try:
             page = paginator.page(current_page)
         except:
-            return JsonResponse([], safe=False)
+            return JsonResponse([
+                "Добавить сюда вывод одного баннера! Или нет баннера"],
+                safe=False)
 
         objects_on_page = page.object_list
-        response_data = [{'id': obj.id, 'name': obj.name} for obj in objects_on_page]
+        response_data = [{"banner_id": obj.id, 
+                          "tag_ids": [obj.tag.id for obj in banner_tags_by_tag\
+                                      .filter(banner=obj.id)],
+                          "feature_id": obj.title,
+                          "content": {
+                              "title": obj.title, 
+                              "text": obj.description, 
+                              "url": obj.url
+                          },
+                          "is_active": obj.is_active,
+                          "created_at": obj.created,
+                          "updated_at": obj.modified
+                          } for obj in objects_on_page]
 
         return JsonResponse(
-            response_data, 
+            response_data,
+            safe=False,
             status=200)
     
     elif request.method == 'POST':
