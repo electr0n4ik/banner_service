@@ -126,13 +126,67 @@ def banners_view(request):
 @csrf_exempt
 def banner_view(request, id):
     if request.method == 'PATCH':
-        return JsonResponse({
-            "content":f"Обновление содержимого баннера {id}"
-            }, status=200)
+        data = json.loads(request.body.decode('utf-8'))
+
+        if not id:
+            "Некорректные данные"
+            return JsonResponse({
+                "error": "Missing banner_id in request data"}, status=400)
+
+        try:
+            banner = models.Banner.objects.get(id=id)
+        except models.Banner.DoesNotExist:
+            "Баннер не найден"
+            return JsonResponse({
+                "error": f"Banner with id {id} does not exist"}, status=404)
+
+        tag_ids = data.get("tag_ids", None)
+        feature_id = data.get("feature_id", None)
+        content = data.get("content", None)
+        is_active = data.get("is_active", None)
+
+        if tag_ids:
+            banner.tag_ids = tag_ids
+
+        if feature_id:
+            banner.feature_id = feature_id
+
+        if content:
+            banner.title = content.get("title", banner.title)
+            banner.description = content.get("text", banner.description)
+            banner.url = content.get("url", banner.url)
+        
+        if is_active:
+            banner.is_active = is_active
+
+        try:
+            banner.save()
+            return JsonResponse("OK", safe=False, status=200)
+        except IntegrityError as e:
+            "Некорректные данные, дубликат"
+            return JsonResponse(
+                {"Incorrect data, exception:": f"{e}"},
+                status=400
+            )
+    
     elif request.method == 'DELETE':
+        if not id:
+            "Некорректные данные"
+            return JsonResponse({
+                "error": "Missing banner_id in request data"}, status=400)
+
+        try:
+            banner = models.Banner.objects.get(id=id)
+        except models.Banner.DoesNotExist:
+            "Баннер не найден"
+            return JsonResponse({
+                "error": f"Banner with id {id} does not exist"}, status=404)
+        
+        banner.delete()
         return JsonResponse({
-            "content": f"Удаление баннера по идентификатору {id}"
+            "content": f"Banner id={id} delete!"
             }, status=204)
+    
     else:
         return JsonResponse({
             'error': 'Method not allowed'
