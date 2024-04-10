@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-(ce)rwdpi$=qm9k*@mcom))ykd^cvli@xnb*)ecxh!zt%n!mhv'
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -41,7 +41,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     'drf_yasg',
+    'django_celery_beat',
     
     'main',
 ]
@@ -132,3 +134,37 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+# CELERY_TASK_TRACK_STARTED = True
+
+CELERY_BEAT_SCHEDULE = {
+    'update_banner_cache_every_5_minutes': {
+        'task': 'main.tasks.update_banner_cache',
+        'schedule': 300,
+    },
+}
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}
+
+# CELERY_BEAT_SCHEDULER='django_celery_beat.schedulers:DatabaseScheduler'
+# REDIS_URL = os.getenv('REDIS_HOST', '127.0.0.1')
+# REDIS_PORT = os.getenv('REDIS_PORT', 6379)
+
+# CELERY_ACCEPT_CONTENT = ['application/json']
+# CELERY_BROKER_URL = os.getenv('REDIS_HOST')
+# CELERY_BACKEND_URL = os.getenv('REDIS_HOST')
+# CELERY_BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}
+# CELERY_TASK_SERIALIZER = 'json'
+# CELERY_RESULT_SERIALIZER = 'json'
+# CELERY_RESULT_BACKEND = os.getenv('REDIS_HOST') + '/0'
+# CELERY_RESULT_EXPIRES = 60

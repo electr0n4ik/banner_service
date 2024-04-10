@@ -34,7 +34,8 @@ the uniqueness of tags for feature data is violated."
             )
 
     def check_data_before_save(self):
-        features_with_same_id = Banner.objects.exclude(id=self.id).filter(feature_id=self.feature_id)
+        features_with_same_id = Banner.objects.exclude(id=self.id).filter(
+            feature_id=self.feature_id)
         if features_with_same_id.exists():
 
             for feature in features_with_same_id:

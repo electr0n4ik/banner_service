@@ -4,33 +4,44 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
 from django.db import IntegrityError
+from django.core.cache import cache
 
 from . import models
+from func import create_periodic_task
 
 
 @csrf_exempt
 def user_banner_view(request):
     if request.method == 'GET':
-        tag_id = request.GET.get("tag_id", None)
-        feature_id = request.GET.get("feature_id", None)
+        tag_id: str = request.GET.get("tag_id", None)
+        feature_id: str = request.GET.get("feature_id", None)
+        use_last_revision: bool = True if request.GET.get(
+            "use_last_revision").lower() == "true" else False
         
+        # banners123 = models.Banner.objects.all()
+        # cache.set('banners_data', banners123, timeout=300)
         if not tag_id or not feature_id:
-            err_text = "Does not exist tag_id" if not tag_id \
+            err_text: str = "Does not exist tag_id" if not tag_id \
                 else "Does not exist feature_id" if not feature_id \
                 else "Does not exist ids"
             return JsonResponse(
                     {"Incorrect data": err_text},
                     safe=False,
                     status=400)
-    
-        banner = models.Banner.objects.all()
-
+        
+        if use_last_revision:
+            banner = models.Banner.objects.all()
+        else:
+            banner = cache.get('banners_data1')
+        print(banner)
+        
         if tag_id:
             banner = banner.filter(tag_ids__contains=[int(tag_id)])
 
         if feature_id:
             banner = banner.filter(feature_id=int(feature_id))
-
+        
+        banner = banner.filter(is_active=True)
         if banner:
             return JsonResponse({
                 "title": banner.first().title, 
