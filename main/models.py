@@ -24,5 +24,20 @@ class Banner(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
 
-    class Meta:
-        unique_together = ('feature_id', 'tag_ids')
+    def save(self, *args, **kwargs):
+        if self.check_data_before_save():
+            super().save(*args, **kwargs)
+        else:
+            raise ValueError(
+                "It is impossible to save the banner: \
+the uniqueness of tags for feature data is violated."
+            )
+
+    def check_data_before_save(self):
+        features_with_same_id = Banner.objects.exclude(id=self.id).filter(feature_id=self.feature_id)
+        if features_with_same_id.exists():
+
+            for feature in features_with_same_id:
+                if set(self.tag_ids) & set(feature.tag_ids):
+                    return False
+        return True

@@ -30,9 +30,7 @@ def user_banner_view(request):
 
         if feature_id:
             banner = banner.filter(feature_id=int(feature_id))
-        for i in banner:
-            
-            print(i)
+
         if banner:
             return JsonResponse({
                 "title": banner.first().title, 
@@ -41,7 +39,7 @@ def user_banner_view(request):
                 }, status=200)
         else:
             return JsonResponse({
-                "error": "Баннер для данной фичи и тега не найден"
+                "error": "Banner for this feature and tag not found!"
             }, status=404)
     else:
         return JsonResponse({
@@ -122,6 +120,11 @@ def banners_view(request):
                 "banner_id": banner.id
                 },
                 status=201)
+        
+        except ValueError as e:
+            return JsonResponse(
+                {"Incorrect data, exception:": f"{e}"},
+                status=400)
         
         except IntegrityError as e:
             return JsonResponse(
