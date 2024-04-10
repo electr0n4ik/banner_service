@@ -20,6 +20,8 @@ urlpatterns = [
     path('user_banner/', views.user_banner_view),
     path('banner/', views.banners_view),
     path('banner/<int:id>/', views.banner_view),
+    path('token/', views.TokenCreateView.as_view(),
+         name='token_obtain_pair'),
 
     path('swagger/', 
          schema_view.with_ui('swagger', cache_timeout=0), 

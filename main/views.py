@@ -5,21 +5,85 @@ from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
 from django.db import IntegrityError
 from django.core.cache import cache
+from django.contrib.auth.models import User
+
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
+from rest_framework.exceptions import (ValidationError, 
+                                       APIException, 
+                                       AuthenticationFailed,)
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from . import models
-from func import create_periodic_task
+from .func import create_periodic_task
+from .models import AdminToken, UserToken
+from .authentication import (AdminTokenAuthentication, 
+                             UserTokenAuthentication, 
+                             AdminCustomToken, 
+                             UserCustomToken)
+
+
+class TokenCreateView(TokenObtainPairView):
+    permission_classes = [AllowAny]
+    # authentication_classes = [AdminTokenAuthentication, UserTokenAuthentication]
+
+    def post(self, request, format=None):
+        user = None
+        try:
+            is_admin = request.data.get('is_admin', False)
+            login_user = request.data.get('username', None)
+            password_user = request.data.get('password', False)
+
+            if not login_user or not password_user:
+                raise ValidationError({
+                    'error': 'Username and password are required'})
+
+            existing_user = User.objects.filter(username=login_user).exists()
+
+            if existing_user:
+                user = User.objects.get(username=login_user)
+
+                refresh = AdminCustomToken.for_user(user) if user.is_superuser \
+                    else UserCustomToken.for_user(user)
+                description_response = "admin_token" if user.is_superuser \
+                    else "user_token"
+                return Response({
+                    "detail": "Account was found",
+                    description_response: str(refresh)})
+
+            if is_admin:
+                user = User.objects.create_superuser(username=login_user, 
+                                                     password=password_user)
+                refresh = AdminCustomToken.for_user(user)
+                return Response({
+                    "detail": "admin_created",
+                    "admin_token": str(refresh)})
+            else:
+                user = User.objects.create_user(username=login_user, 
+                                                password=password_user)
+                refresh = UserCustomToken.for_user(user)
+                return Response({
+                    "detail": "user_created",
+                    "user_token": str(refresh)})
+
+        except Exception as e:
+            raise APIException({
+                "error": e})
 
 
 @csrf_exempt
 def user_banner_view(request):
+    # if request.user.is_staff:
+    #         return True
+    #     else:
+    #         return False
     if request.method == 'GET':
         tag_id: str = request.GET.get("tag_id", None)
         feature_id: str = request.GET.get("feature_id", None)
         use_last_revision: bool = True if request.GET.get(
             "use_last_revision").lower() == "true" else False
         
-        # banners123 = models.Banner.objects.all()
-        # cache.set('banners_data', banners123, timeout=300)
         if not tag_id or not feature_id:
             err_text: str = "Does not exist tag_id" if not tag_id \
                 else "Does not exist feature_id" if not feature_id \

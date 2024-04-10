@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 import os
 import dotenv
+from datetime import timedelta
 
 from pathlib import Path
 
@@ -44,7 +45,9 @@ INSTALLED_APPS = [
 
     'drf_yasg',
     'django_celery_beat',
-    
+    'rest_framework',
+    'rest_framework_simplejwt',
+
     'main',
 ]
 
@@ -156,15 +159,9 @@ CACHES = {
     }
 }
 
-# CELERY_BEAT_SCHEDULER='django_celery_beat.schedulers:DatabaseScheduler'
-# REDIS_URL = os.getenv('REDIS_HOST', '127.0.0.1')
-# REDIS_PORT = os.getenv('REDIS_PORT', 6379)
-
-# CELERY_ACCEPT_CONTENT = ['application/json']
-# CELERY_BROKER_URL = os.getenv('REDIS_HOST')
-# CELERY_BACKEND_URL = os.getenv('REDIS_HOST')
-# CELERY_BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}
-# CELERY_TASK_SERIALIZER = 'json'
-# CELERY_RESULT_SERIALIZER = 'json'
-# CELERY_RESULT_BACKEND = os.getenv('REDIS_HOST') + '/0'
-# CELERY_RESULT_EXPIRES = 60
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'main.authentication.AdminTokenAuthentication',
+        'main.authentication.UserTokenAuthentication',
+    ],
+}
