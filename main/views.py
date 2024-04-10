@@ -16,7 +16,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from . import models
-from .func import create_periodic_task
+# from .func import create_periodic_task
 from .models import AdminToken, UserToken
 from .authentication import (AdminTokenAuthentication, 
                              UserTokenAuthentication, 
@@ -27,6 +27,23 @@ from .authentication import (AdminTokenAuthentication,
 class TokenCreateView(TokenObtainPairView):
     permission_classes = [AllowAny]
     # authentication_classes = [AdminTokenAuthentication, UserTokenAuthentication]
+    banners = models.Banner.objects.all()
+    banner_data = []
+
+    for banner in banners:
+        banner_dict = {
+            "feature_id": banner.feature_id,
+            "tag_ids": banner.tag_ids,
+            "title": banner.title,
+            "description": banner.description,
+            "url": banner.url,
+            "is_active": banner.is_active,
+            "created": banner.created.isoformat(),
+            "modified": banner.modified.isoformat()
+        }
+        banner_data.append(banner_dict)
+
+    cache.set("banners", json.dumps(banner_data))
 
     def post(self, request, format=None):
         user = None
@@ -74,10 +91,7 @@ class TokenCreateView(TokenObtainPairView):
 
 @csrf_exempt
 def user_banner_view(request):
-    # if request.user.is_staff:
-    #         return True
-    #     else:
-    #         return False
+
     if request.method == 'GET':
         tag_id: str = request.GET.get("tag_id", None)
         feature_id: str = request.GET.get("feature_id", None)
@@ -96,8 +110,19 @@ def user_banner_view(request):
         if use_last_revision:
             banner = models.Banner.objects.all()
         else:
-            banner = cache.get('banners_data1')
-        print(banner)
+            banners_data = json.loads(cache.get('banners'))
+            for banner_data in banners_data:
+                if int(feature_id) == banner_data['feature_id'] and \
+                    int(tag_id) in banner_data['tag_ids']:
+                    return JsonResponse({
+                        "title": banner_data.get("title"), 
+                        "text": banner_data.get("description"), 
+                        "url": banner_data.get("url")
+                        }, status=200)
+                
+            return JsonResponse({
+                "error": "Banner for this feature and tag not found!"
+            }, status=404)
         
         if tag_id:
             banner = banner.filter(tag_ids__contains=[int(tag_id)])
