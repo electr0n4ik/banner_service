@@ -1,7 +1,6 @@
 from datetime import timedelta
 
 from django.utils import timezone
-from django.http import JsonResponse
 
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import BasePermission
@@ -22,8 +21,7 @@ class UserCustomTokenPermission(BasePermission):
 def validate_custom_token(request):
     token = request.headers.get('Authorization')
     if not token:
-        return False
-    
+        raise AuthenticationFailed('Укажите токен')
 
     if len(token) == 16:
         token = AdminToken.objects.filter(key=token)
