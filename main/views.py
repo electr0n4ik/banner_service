@@ -116,7 +116,7 @@ class UserBannerView(APIView):
                     safe=False,
                     status=400)
         
-        if use_last_revision:
+        if 1:  # use_last_revision:
             banner = models.Banner.objects.all()
         else:
             banners_data = json.loads(cache.get('banners'))

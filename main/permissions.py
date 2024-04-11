@@ -1,3 +1,9 @@
+from datetime import timedelta
+
+from django.utils import timezone
+from django.http import JsonResponse
+
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import BasePermission
 
 from .models import AdminToken, UserToken
@@ -18,11 +24,24 @@ def validate_custom_token(request):
     if not token:
         return False
     
+
     if len(token) == 16:
-        token = AdminToken.objects.get(key=token)
-        return True if token.user.is_superuser else False
-
+        token = AdminToken.objects.filter(key=token)
+        if token and token.first().expiration_time < timezone.now() - \
+            timedelta(hours=0.01):
+            token.delete()
+            raise AuthenticationFailed('Токен истек')
+        elif token:
+            return True if token.first().user.is_superuser else False
+        else:
+            raise AuthenticationFailed('Токена не существует, создайте новый')
     elif len(token) == 32:
-        return True if UserToken.objects.get(key=token) else False
-
-    return False
+        token = UserToken.objects.filter(key=token)
+        if token and token.first().expiration_time < timezone.now() - \
+            timedelta(hours=1):
+            token.delete()
+            raise AuthenticationFailed('Токен истек')
+        elif token:
+            return True if token else False
+        else:
+            raise AuthenticationFailed('Токена не существует, создайте новый')
