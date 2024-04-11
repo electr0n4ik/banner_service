@@ -105,7 +105,7 @@ class UserBannerView(APIView):
         tag_id: str = request.GET.get("tag_id", None)
         feature_id: str = request.GET.get("feature_id", None)
         use_last_revision: bool = True if request.GET.get(
-            "use_last_revision").lower() == "true" else False
+            "use_last_revision").lower() == "true" else False#TODO: исправить кеш
         
         if not tag_id or not feature_id:
             err_text: str = "Does not exist tag_id" if not tag_id \
@@ -152,9 +152,11 @@ class UserBannerView(APIView):
             }, status=404)
 
 
-@csrf_exempt
-def banners_view(request):
-    if request.method == 'GET':
+class BannersView(APIView):
+    permission_classes = [AdminCustomTokenPermission, UserCustomTokenPermission]
+
+    def get(self, request):
+        
         tag_id = request.GET.get("tag_id", None)
         feature_id = request.GET.get("feature_id", None)
         limit = int(request.GET.get('limit', 100))
@@ -202,7 +204,7 @@ def banners_view(request):
             safe=False,
             status=200)
     
-    elif request.method == 'POST':
+    def post(self, request):
 
         data = json.loads(request.body.decode('utf-8'))
         tag_ids = data.get("tag_ids")
@@ -230,21 +232,13 @@ def banners_view(request):
             return JsonResponse(
                 {"Incorrect data, exception:": f"{e}"},
                 status=400)
-        
-        except IntegrityError as e:
-            return JsonResponse(
-                {"Incorrect data, exception:": f"{e}"},
-                status=400)
-    
-    else:
-        return JsonResponse({
-            'error': 'Method not allowed'
-            }, status=405)
 
 
-@csrf_exempt
-def banner_view(request, id):
-    if request.method == 'PATCH':
+class BannerView(APIView):
+    permission_classes = [AdminCustomTokenPermission, 
+                          UserCustomTokenPermission]
+    allowed_methods = ['PATCH', 'DELETE']
+    def patch(self, request, id):
         data = json.loads(request.body.decode('utf-8'))
 
         if not id:
@@ -281,14 +275,13 @@ def banner_view(request, id):
         try:
             banner.save()
             return JsonResponse("OK", safe=False, status=200)
-        except IntegrityError as e:
-            "Некорректные данные, дубликат"
+        
+        except ValueError as e:
             return JsonResponse(
                 {"Incorrect data, exception:": f"{e}"},
-                status=400
-            )
+                status=400)
     
-    elif request.method == 'DELETE':
+    def delete(self, request, id):
         if not id:
             "Некорректные данные"
             return JsonResponse({
@@ -305,9 +298,4 @@ def banner_view(request, id):
         return JsonResponse({
             "content": f"Banner id={id} delete!"
             }, status=204)
-    
-    else:
-        return JsonResponse({
-            'error': 'Method not allowed'
-            }, status=405)
     

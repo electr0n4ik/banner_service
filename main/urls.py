@@ -19,8 +19,11 @@ schema_view = get_schema_view(
 urlpatterns = [
     path('user_banner/', views.UserBannerView.as_view(), 
          name='user_banner_view'),
-    path('banner/', views.banners_view),
-    path('banner/<int:id>/', views.banner_view),
+    path('banner/', views.BannersView.as_view(),
+         name='banners_view'),
+    path('banner/<int:id>/', views.BannerView.as_view(),
+         name='banner_view'),
+
     path('token/', views.TokenCreateView.as_view(),
          name='token_obtain_pair'),
 

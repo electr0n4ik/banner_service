@@ -30,8 +30,8 @@ class Banner(models.Model):
             super().save(*args, **kwargs)
         else:
             raise ValueError(
-                "It is impossible to save the banner: \
-the uniqueness of tags for feature data is violated."
+                "Неверные данные. Один баннер может принадлежать одной фиче. \
+Не может быть одинаковых тегов у двух баннеров с одинаковыми фичами."
             )
 
     def check_data_before_save(self):
