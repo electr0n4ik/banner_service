@@ -17,7 +17,8 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    path('user_banner/', views.user_banner_view),
+    path('user_banner/', views.UserBannerView.as_view(), 
+         name='user_banner_view'),
     path('banner/', views.banners_view),
     path('banner/<int:id>/', views.banner_view),
     path('token/', views.TokenCreateView.as_view(),

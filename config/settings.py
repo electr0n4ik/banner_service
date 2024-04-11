@@ -158,10 +158,3 @@ CACHES = {
         }
     }
 }
-
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'main.authentication.AdminTokenAuthentication',
-        'main.authentication.UserTokenAuthentication',
-    ],
-}

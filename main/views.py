@@ -6,27 +6,27 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db import IntegrityError
 from django.core.cache import cache
 from django.contrib.auth.models import User
+from django.contrib.auth import login, authenticate
 
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework.exceptions import (ValidationError, 
-                                       APIException, 
-                                       AuthenticationFailed,)
+                                       APIException,)
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
 
 from . import models
 # from .func import create_periodic_task
-from .models import AdminToken, UserToken
-from .authentication import (AdminTokenAuthentication, 
-                             UserTokenAuthentication, 
-                             AdminCustomToken, 
+from .authentication import (AdminCustomToken,
                              UserCustomToken)
+
+from .permissions import (AdminCustomTokenPermission,
+                          UserCustomTokenPermission,)
 
 
 class TokenCreateView(TokenObtainPairView):
     permission_classes = [AllowAny]
-    # authentication_classes = [AdminTokenAuthentication, UserTokenAuthentication]
     banners = models.Banner.objects.all()
     banner_data = []
 
@@ -59,19 +59,25 @@ class TokenCreateView(TokenObtainPairView):
             existing_user = User.objects.filter(username=login_user).exists()
 
             if existing_user:
-                user = User.objects.get(username=login_user)
+                user = authenticate(request, 
+                                    username=login_user, 
+                                    password=password_user)
 
-                refresh = AdminCustomToken.for_user(user) if user.is_superuser \
-                    else UserCustomToken.for_user(user)
-                description_response = "admin_token" if user.is_superuser \
-                    else "user_token"
+                refresh_token = AdminCustomToken if user.is_superuser else UserCustomToken
+                refresh = refresh_token.for_user(user)
+
+                description_response = "admin_token" if user.is_superuser else "user_token"
+                login(request, user)
                 return Response({
                     "detail": "Account was found",
-                    description_response: str(refresh)})
+                    description_response: str(refresh)
+                })
+                
 
             if is_admin:
                 user = User.objects.create_superuser(username=login_user, 
                                                      password=password_user)
+                login(request, user)
                 refresh = AdminCustomToken.for_user(user)
                 return Response({
                     "detail": "admin_created",
@@ -79,20 +85,23 @@ class TokenCreateView(TokenObtainPairView):
             else:
                 user = User.objects.create_user(username=login_user, 
                                                 password=password_user)
+                login(request, user)
                 refresh = UserCustomToken.for_user(user)
                 return Response({
                     "detail": "user_created",
                     "user_token": str(refresh)})
+
 
         except Exception as e:
             raise APIException({
                 "error": e})
 
 
-@csrf_exempt
-def user_banner_view(request):
+class UserBannerView(APIView):
+    permission_classes = [AdminCustomTokenPermission, 
+                          UserCustomTokenPermission]
 
-    if request.method == 'GET':
+    def get(self, request):
         tag_id: str = request.GET.get("tag_id", None)
         feature_id: str = request.GET.get("feature_id", None)
         use_last_revision: bool = True if request.GET.get(
@@ -141,10 +150,6 @@ def user_banner_view(request):
             return JsonResponse({
                 "error": "Banner for this feature and tag not found!"
             }, status=404)
-    else:
-        return JsonResponse({
-            'error': 'Method not allowed'
-            }, status=405)
 
 
 @csrf_exempt
