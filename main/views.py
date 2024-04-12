@@ -228,7 +228,33 @@ class BannersView(APIView):
 class BannerView(APIView):
     permission_classes = [AdminCustomTokenPermission, 
                           UserCustomTokenPermission]
-    allowed_methods = ['PATCH', 'DELETE']
+    
+    def get(self, request, id):
+
+        if not id:
+            "Некорректные данные"
+            return JsonResponse({
+                "error": "Missing banner_id in request data"}, status=400)
+        try:
+            banner = models.Banner.objects.get(id=id)
+            banner_versions = models.BannerVersion.objects.filter(banner=banner)
+            list_banner_versions = [obj.banner_body for obj in banner_versions]
+            return JsonResponse(
+                {"current_version": banner.get_banner_data(),
+                 "last_versions": 
+                     list_banner_versions
+                },
+                status=200)
+        except models.Banner.DoesNotExist:
+            "Баннер не найден"
+            return JsonResponse({
+                "error": f"Banner with id {id} does not exist"}, status=404)
+        
+        except ValueError as e:
+            return JsonResponse(
+                {"Incorrect data, exception:": f"{e}"},
+                status=400)
+
     def patch(self, request, id):
         data = json.loads(request.body.decode('utf-8'))
 
