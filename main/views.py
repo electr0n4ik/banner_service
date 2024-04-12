@@ -113,7 +113,9 @@ class UserBannerView(APIView):
                     return JsonResponse({
                         "title": banner_data.get("title"), 
                         "text": banner_data.get("description"), 
-                        "url": banner_data.get("url")
+                        "url": banner_data.get("url"),
+                        "current_version": banner_data.get(
+                            "current_version")
                         }, status=200)
                 
             return JsonResponse({
@@ -131,7 +133,8 @@ class UserBannerView(APIView):
             return JsonResponse({
                 "title": banner.first().title, 
                 "text": banner.first().description, 
-                "url": banner.first().url
+                "url": banner.first().url,
+                "current_version": banner.first().current_version
                 }, status=200)
         else:
             return JsonResponse({
@@ -180,7 +183,8 @@ class BannersView(APIView):
                 },
                 "is_active": obj.is_active,
                 "created_at": obj.created,
-                "updated_at": obj.modified
+                "updated_at": obj.modified,
+                "current_version": obj.current_version
             })
 
         return JsonResponse(

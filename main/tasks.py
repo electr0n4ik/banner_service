@@ -19,7 +19,8 @@ def my_periodic_task():
             "url": banner.url,
             "is_active": banner.is_active,
             "created": banner.created.isoformat(),
-            "modified": banner.modified.isoformat()
+            "modified": banner.modified.isoformat(),
+            "current_version": banner.current_version
         }
         banner_data.append(banner_dict)
     cache.set("banners", json.dumps(banner_data))

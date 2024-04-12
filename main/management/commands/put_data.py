@@ -2,7 +2,7 @@ import random
 import time
 from django.core.management.base import BaseCommand
 from django.db import connection, IntegrityError
-from main.models import Banner
+from main.models import Banner, BannerVersion
 
 
 class Command(BaseCommand):
@@ -16,10 +16,12 @@ class Command(BaseCommand):
                             help='Очистить существующие записи перед созданием')
 
     def clear_existing_data(self):
+        BannerVersion.objects.all().delete()
         Banner.objects.all().delete()
 
         with connection.cursor() as cursor:
             cursor.execute("ALTER SEQUENCE main_banner_id_seq RESTART WITH 1")
+            cursor.execute("ALTER SEQUENCE main_bannerversion_id_seq RESTART WITH 1")
 
     def handle(self, *args, **kwargs):
         start_time = time.time()
@@ -41,10 +43,9 @@ class Command(BaseCommand):
                     total_tags += num_tags
                     selected_tags = random.sample(tag_ids_array, num_tags)
                     
-                    banner = Banner.objects.create(feature_id=random.randint(
-                        1, 10**6),
-                                                   tag_ids=selected_tags)
-                    banner.save()
+                    Banner.objects.create(feature_id=random.randint(
+                        1, 10**6), tag_ids=selected_tags)
+                    # banner.save()
                     break
                 except IntegrityError:
                     pass
