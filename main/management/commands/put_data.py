@@ -30,7 +30,7 @@ class Command(BaseCommand):
 
         n_features = kwargs['n_features']
 
-        tag_ids_array = [i for i in range(1, int(n_features * 1.2) + 1)]
+        tag_ids_array = [i for i in range(1, int(n_features * 0.8) + 1)]
         random_indexes = random.sample(range(len(tag_ids_array)), 
                                        min(3, len(tag_ids_array)))
         selected_tags = [tag_ids_array[i] for i in random_indexes]
@@ -44,7 +44,7 @@ class Command(BaseCommand):
                     selected_tags = random.sample(tag_ids_array, num_tags)
                     
                     banner = Banner.objects.create(feature_id=random.randint(
-                        1, 10**6), tag_ids=selected_tags)
+                        1, 10**4), tag_ids=selected_tags)
                     
                     BannerVersion.objects.create(
                         banner=banner,

@@ -14,12 +14,11 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.views import APIView
 
 from . import models
-
 from .authentication import (AdminCustomToken,
                              UserCustomToken)
-
 from .permissions import (AdminCustomTokenPermission,
                           UserCustomTokenPermission,)
+from . tasks import my_task_to_del_banners
 
 
 class TokenCreateView(TokenObtainPairView):
@@ -224,6 +223,26 @@ class BannersView(APIView):
                 {"Incorrect data, exception:": f"{e}"},
                 status=400)
 
+    def delete(self, request):
+        data = json.loads(request.body.decode('utf-8'))
+        tag_ids = data.get("tag_ids", None)
+        feature_id = data.get("feature_id", None)
+
+        if tag_ids:
+            for tag_id in tag_ids:
+                my_task_to_del_banners.apply_async(args=[None, tag_id])
+        elif feature_id:
+            my_task_to_del_banners.apply_async(args=[feature_id, None])
+        else:
+            return JsonResponse({
+                "detail": "Укажите tag_ids и feature_id!"
+                },
+                status=400)
+
+        return JsonResponse({
+                "detail": "Процесс удаления запущен!"
+                },
+                status=204)
 
 class BannerView(APIView):
     permission_classes = [AdminCustomTokenPermission, 

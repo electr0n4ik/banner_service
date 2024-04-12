@@ -4,9 +4,10 @@ from django.core.cache import cache
 
 from celery import shared_task
 
+from . import models
+
 @shared_task
 def my_periodic_task():
-    from . import models
     banners = models.Banner.objects.all()
     banner_data = []
 
@@ -24,3 +25,19 @@ def my_periodic_task():
         }
         banner_data.append(banner_dict)
     cache.set("banners", json.dumps(banner_data))
+
+@shared_task
+def my_task_to_del_banners(feature_id=None, tag_id=None):
+    if not tag_id and not feature_id:
+        return False
+
+    banners_to_delete = models.Banner.objects.all()
+
+    if tag_id:
+        banners_to_delete = banners_to_delete.filter(tag_ids__contains=[tag_id])
+
+    elif feature_id:
+        banners_to_delete = banners_to_delete.filter(feature_id=feature_id)
+
+    deleted_count, _ = banners_to_delete.delete()
+    
