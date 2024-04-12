@@ -82,6 +82,8 @@ class UserBannerView(APIView):
                           UserCustomTokenPermission]
 
     def get(self, request):
+        token = request.headers.get('Authorization')
+            
         tag_id: str = request.GET.get("tag_id", None)
         feature_id: str = request.GET.get("feature_id", None)
         use_last_revision: bool = True if request.GET.get(
@@ -101,6 +103,11 @@ class UserBannerView(APIView):
         else:
             banners_data = json.loads(cache.get('banners'))
             for banner_data in banners_data:
+                if len(token) == 32 and not banner_data['is_active']:
+                    JsonResponse({
+                        "error": "Banner for this feature and tag not found!"
+                    }, status=404)
+
                 if int(feature_id) == banner_data['feature_id'] and \
                     int(tag_id) in banner_data['tag_ids']:
                     return JsonResponse({
@@ -136,7 +143,7 @@ class BannersView(APIView):
     permission_classes = [AdminCustomTokenPermission, UserCustomTokenPermission]
 
     def get(self, request):
-        
+        token = request.headers.get('Authorization')
         tag_id = request.GET.get("tag_id", None)
         feature_id = request.GET.get("feature_id", None)
         limit = int(request.GET.get('limit', 100))
@@ -152,19 +159,16 @@ class BannersView(APIView):
 
         paginator = Paginator(banners, limit)
         current_page = (offset // limit) + 1
-
-        try:
-            page = paginator.page(current_page)
-        except:
-            return JsonResponse([
-                "Добавить сюда вывод одного баннера! Или нет баннера"],  #TODO:
-                safe=False)
-
+        page = paginator.page(current_page)
         objects_on_page = page.object_list
-        response_data = [f"count: {len(objects_on_page)}"]
+        response_data = [{"count": len(objects_on_page)}]
 
         for obj in objects_on_page:
 
+            if len(token) == 32 and not obj.is_active:
+                    response_data[0]["count"] -= 1
+                    continue
+            
             response_data.append({
                 "banner_id": obj.id,
                 "tag_ids": obj.tag_ids,
@@ -182,7 +186,10 @@ class BannersView(APIView):
         return JsonResponse(
             response_data,
             safe=False,
-            status=200)
+            status=200) if len(response_data) > 0 \
+                else JsonResponse({
+                        "error": "Banner for this feature and tag not found!"
+                    }, status=404)
     
     def post(self, request):
 

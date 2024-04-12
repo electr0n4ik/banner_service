@@ -36,6 +36,7 @@ def validate_custom_token(request):
         
     elif len(token) == 32:
         token = UserToken.objects.filter(key=token)
+        
         if request.method == 'GET':
             if token and token.first().expiration_time < timezone.now() - \
                 timedelta(hours=1):
@@ -48,3 +49,4 @@ def validate_custom_token(request):
                     ('Токен не существует, создайте новый')
         else:
             raise AuthenticationFailed('Доступ запрещен')
+        
