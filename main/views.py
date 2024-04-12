@@ -42,10 +42,12 @@ class TokenCreateView(TokenObtainPairView):
                                     username=login_user, 
                                     password=password_user)
 
-                refresh_token = AdminCustomToken if user.is_superuser else UserCustomToken
+                refresh_token = AdminCustomToken if user.is_superuser \
+                    else UserCustomToken
                 refresh = refresh_token.for_user(user)
 
-                description_response = "admin_token" if user.is_superuser else "user_token"
+                description_response = "admin_token" if user.is_superuser \
+                    else "user_token"
                 login(request, user)
                 return Response({
                     "detail": "Account was found",
@@ -69,7 +71,6 @@ class TokenCreateView(TokenObtainPairView):
                 return Response({
                     "detail": "user_created",
                     "user_token": str(refresh)})
-
 
         except Exception as e:
             raise APIException({
@@ -114,8 +115,7 @@ class UserBannerView(APIView):
                         "text": banner_data.get("description"), 
                         "url": banner_data.get("url"),
                         "current_version": banner_data.get(
-                            "current_version")
-                        }, status=200)
+                            "current_version")}, status=200)
                 
             return JsonResponse({
                 "error": "Banner for this feature and tag not found!"
@@ -133,8 +133,7 @@ class UserBannerView(APIView):
                 "title": banner.first().title, 
                 "text": banner.first().description, 
                 "url": banner.first().url,
-                "current_version": banner.first().current_version
-                }, status=200)
+                "current_version": banner.first().current_version}, status=200)
         else:
             return JsonResponse({
                 "error": "Banner for this feature and tag not found!"
@@ -189,10 +188,9 @@ class BannersView(APIView):
         return JsonResponse(
             response_data,
             safe=False,
-            status=200) if len(response_data) > 0 \
-                else JsonResponse({
-                        "error": "Banner for this feature and tag not found!"
-                    }, status=404)
+            status=200) if len(response_data) > 0 else JsonResponse(
+                    {"error": "Banner for this feature and tag not found!"}, 
+                    status=404)
     
     def post(self, request):
 
@@ -204,7 +202,7 @@ class BannersView(APIView):
 
         try:
             banner = models.Banner.objects.create(
-                feature_id=feature_id,\
+                feature_id=feature_id,
                 tag_ids=tag_ids,
                 title=content.get("title"),
                 description=content.get("text"),
@@ -214,8 +212,7 @@ class BannersView(APIView):
 
             return JsonResponse({
                 "method": request.method,
-                "banner_id": banner.id
-                },
+                "banner_id": banner.id},
                 status=201)
         
         except ValueError as e:
@@ -235,13 +232,11 @@ class BannersView(APIView):
             my_task_to_del_banners.apply_async(args=[feature_id, None])
         else:
             return JsonResponse({
-                "detail": "Укажите tag_ids и feature_id!"
-                },
+                "detail": "Укажите tag_ids и feature_id!"},
                 status=400)
 
         return JsonResponse({
-                "detail": "Процесс удаления запущен!"
-                },
+                "detail": "Процесс удаления запущен!"},
                 status=204)
 
 class BannerView(APIView):
@@ -261,8 +256,7 @@ class BannerView(APIView):
             return JsonResponse(
                 {"current_version": banner.get_banner_data(),
                  "last_versions": 
-                     list_banner_versions
-                },
+                     list_banner_versions},
                 status=200)
         except models.Banner.DoesNotExist:
             "Баннер не найден"
@@ -363,6 +357,4 @@ does not exist"}, status=404)
         
         banner.delete()
         return JsonResponse({
-            "content": f"Banner id={id} delete!"
-            }, status=204)
-    
+            "content": f"Banner id={id} delete!"}, status=204)

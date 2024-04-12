@@ -45,8 +45,8 @@ def validate_custom_token(request):
             elif token:
                 return True if token else False
             else:
-                raise AuthenticationFailed\
-                    ('Токен не существует, создайте новый')
+                raise AuthenticationFailed('Токен не существует, \
+создайте новый')
         else:
             raise AuthenticationFailed('Доступ запрещен')
         

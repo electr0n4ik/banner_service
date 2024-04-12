@@ -6,10 +6,6 @@ class TestUserBannerView(unittest.TestCase):
     tag_id = ''
     feature_id = ''
 
-    # params = {'tag_id': tag_id, 'feature_id': feature_id}
-    # user_banner_response = requests.get(self.user_banner_url, params=params, headers=headers)
-    # data=json.dumps(body)
-
     def setUp(self):
         self.base_url = 'http://localhost:8000/'
         self.token_url = self.base_url + 'token/'
@@ -23,7 +19,7 @@ class TestUserBannerView(unittest.TestCase):
             "is_admin": True,
             'username': self.username, 
             'password': self.password})
-        self.token = response.json().get('admin_token')  # user_token
+        self.token = response.json().get('admin_token')
 
         print(self.token)
 
@@ -66,11 +62,13 @@ class TestUserBannerView(unittest.TestCase):
     #     feature_id = '999'
 
     #     headers = {'Authorization': f'{self.token}'}
-    #     response = requests.get(self.banner_url, params={'tag_id': tag_id, 'feature_id': feature_id}, headers=headers)
+    #     response = requests.get(self.banner_url, params={'tag_id': tag_id, \
+    # 'feature_id': feature_id}, headers=headers)
 
     #     self.assertEqual(response.status_code, 404)
 
     #     self.assertIn('error', response.json())
+
 
 if __name__ == '__main__':
     unittest.main()

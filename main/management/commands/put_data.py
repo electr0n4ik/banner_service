@@ -21,7 +21,8 @@ class Command(BaseCommand):
 
         with connection.cursor() as cursor:
             cursor.execute("ALTER SEQUENCE main_banner_id_seq RESTART WITH 1")
-            cursor.execute("ALTER SEQUENCE main_bannerversion_id_seq RESTART WITH 1")
+            cursor.execute("ALTER SEQUENCE main_bannerversion_id_seq \
+RESTART WITH 1")
 
     def handle(self, *args, **kwargs):
         start_time = time.time()
