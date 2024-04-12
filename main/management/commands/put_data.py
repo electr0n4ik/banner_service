@@ -39,13 +39,17 @@ class Command(BaseCommand):
 
             while True:
                 try:
-                    num_tags = random.randint(1, 3)
+                    num_tags = random.randint(1, min(3, len(tag_ids_array)))
                     total_tags += num_tags
                     selected_tags = random.sample(tag_ids_array, num_tags)
                     
-                    Banner.objects.create(feature_id=random.randint(
+                    banner = Banner.objects.create(feature_id=random.randint(
                         1, 10**6), tag_ids=selected_tags)
-                    # banner.save()
+                    
+                    BannerVersion.objects.create(
+                        banner=banner,
+                        banner_body=banner.get_banner_data(),
+                        version_number=banner.current_version)
                     break
                 except IntegrityError:
                     pass

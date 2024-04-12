@@ -270,6 +270,37 @@ class BannerView(APIView):
             return JsonResponse({
                 "error": f"Banner with id {id} does not exist"}, status=404)
 
+        banner_version = data.get("banner_version", None)
+        flag_apply_ver = False
+        last_version_banner = banner.current_version
+        if banner_version is not None:
+            flag_apply_ver = True
+            banner_versions = models.BannerVersion.objects.filter(
+                banner_id=banner)
+            if banner_versions:
+                for i in banner_versions:
+                    if banner_version == i.version_number:
+                        banner_body = i.banner_body
+
+                        banner.tag_ids = banner_body.get("tag_ids")
+                        banner.feature_id = banner_body.get("feature_id")
+                        banner.title = banner_body.get("title")
+                        banner.description = banner_body.get("description")
+                        banner.url = banner_body.get("url")
+                        banner.is_active = banner_body.get("is_active")
+                        banner.current_version = banner_body.get(
+                            "current_version")
+                        
+                        banner.save(version_rollback=True)
+
+                        return JsonResponse({
+                            "OK": f"Баннер №{id} найден и изменен с версии \
+{last_version_banner} на {banner_version}"}, status=200)
+        if flag_apply_ver:
+            return JsonResponse({
+                "error": f"Banner with id {id} and version {banner_version} \
+does not exist"}, status=404)
+        
         tag_ids = data.get("tag_ids", None)
         feature_id = data.get("feature_id", None)
         content = data.get("content", None)

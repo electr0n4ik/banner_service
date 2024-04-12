@@ -26,38 +26,21 @@ class Banner(models.Model):
     modified = models.DateTimeField(auto_now=True)
     current_version = models.IntegerField(default=0)
 
-    def save(self, *args, **kwargs):
+    def save(self, version_rollback=False, *args, **kwargs):
         if self.check_data_before_save():
             if self.pk is None:
                 super().save(*args, **kwargs)
-            else:
+            elif not version_rollback:
                 new_version_number = self.current_version + 1
-                
-                banner_version = BannerVersion.objects.create(
+                BannerVersion.objects.create(
                     banner=self,
                     banner_body=self.get_banner_data(),
                     version_number=new_version_number)
 
                 self.current_version = new_version_number
                 super().save(*args, **kwargs)
-            # if self.pk is None:
-            #     new_version_number = 1
-            #     self.current_version = new_version_number
-            #     super().save(*args, **kwargs)
-            #     BannerVersion.objects.create(
-            #         banner=self,
-            #         banner_body=self.get_banner_data(),
-            #         version_number=new_version_number)
-            # else:
-            #     current_version_number = self.current_version
-            #     new_version_number = current_version_number + 1
-
-            #     BannerVersion.objects.create(
-            #         banner=self,
-            #         banner_body=self.get_banner_data(),
-            #         version_number=new_version_number)
-            #     self.current_version = new_version_number
-            #     super().save(*args, **kwargs)
+            else:
+                super().save(*args, **kwargs)
         else:
             raise ValueError(
                 "Неверные данные. Один баннер может принадлежать одной фиче. \
@@ -87,7 +70,6 @@ class Banner(models.Model):
 
 
 class BannerVersion(models.Model):
-    # banner_id = models.IntegerField(default=0)
     banner = models.ForeignKey(Banner, 
                                on_delete=models.CASCADE, 
                                related_name='versions')
