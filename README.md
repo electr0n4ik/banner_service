@@ -21,4 +21,10 @@
     6. Кеш для user_banner_view работает;
     7. Проверка пользователя по токену в 1 вьюшке.
 </p>
+
+Запустите Celery для выполнения периодических задач:
+celery -A main(config?) beat -l info
+
+Запуск рабочих процессов Celery для выполнения задач:
+celery -A main  worker --purge
 celery -A main  worker --loglevel=info

@@ -32,15 +32,17 @@ class Command(BaseCommand):
         random_indexes = random.sample(range(len(tag_ids_array)), 
                                        min(3, len(tag_ids_array)))
         selected_tags = [tag_ids_array[i] for i in random_indexes]
-
+        total_tags = 0
         for _ in range(n_features):
 
             while True:
                 try:
                     num_tags = random.randint(1, 3)
+                    total_tags += num_tags
                     selected_tags = random.sample(tag_ids_array, num_tags)
                     
-                    banner = Banner.objects.create(feature_id=random.randint(1, 10**6),
+                    banner = Banner.objects.create(feature_id=random.randint(
+                        1, 10**6),
                                                    tag_ids=selected_tags)
                     banner.save()
                     break
@@ -52,4 +54,8 @@ class Command(BaseCommand):
         elapsed_time = end_time - start_time
 
         self.stdout.write(self.style.SUCCESS(
-            f'Успешно созданы записи за {elapsed_time:.2f} секунд'))
+            f'Успешно созданы записи за {elapsed_time:.2f} секунд, '
+            f'Количество созданных фич: {n_features}, '
+            f'количество тегов: {total_tags}, '
+            f'общее количество записей: {n_features + total_tags}'))
+        

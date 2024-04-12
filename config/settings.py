@@ -45,7 +45,6 @@ INSTALLED_APPS = [
     'drf_yasg',
     'django_celery_beat',
     'rest_framework',
-    'rest_framework_simplejwt',
 
     'main',
 ]
@@ -144,10 +143,11 @@ CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 
 CELERY_BEAT_SCHEDULE = {
     'update_banner_cache_every_5_minutes': {
-        'task': 'main.tasks.update_banner_cache',
+        'task': 'main.tasks.my_periodic_task',
         'schedule': 300,
     },
 }
+
 
 CACHES = {
     'default': {

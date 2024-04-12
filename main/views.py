@@ -2,22 +2,19 @@ import json
 
 from django.http import JsonResponse
 from django.core.paginator import Paginator
-from django.views.decorators.csrf import csrf_exempt
-from django.db import IntegrityError
-from django.core.cache import cache
 from django.contrib.auth.models import User
 from django.contrib.auth import login, authenticate
+from django.core.cache import cache
 
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework.exceptions import (ValidationError, 
                                        APIException,)
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
 from . import models
-# from .func import create_periodic_task
+
 from .authentication import (AdminCustomToken,
                              UserCustomToken)
 
@@ -27,23 +24,6 @@ from .permissions import (AdminCustomTokenPermission,
 
 class TokenCreateView(TokenObtainPairView):
     permission_classes = [AllowAny]
-    banners = models.Banner.objects.all()
-    banner_data = []
-
-    for banner in banners:
-        banner_dict = {
-            "feature_id": banner.feature_id,
-            "tag_ids": banner.tag_ids,
-            "title": banner.title,
-            "description": banner.description,
-            "url": banner.url,
-            "is_active": banner.is_active,
-            "created": banner.created.isoformat(),
-            "modified": banner.modified.isoformat()
-        }
-        banner_data.append(banner_dict)
-
-    cache.set("banners", json.dumps(banner_data))
 
     def post(self, request, format=None):
         user = None
@@ -105,7 +85,7 @@ class UserBannerView(APIView):
         tag_id: str = request.GET.get("tag_id", None)
         feature_id: str = request.GET.get("feature_id", None)
         use_last_revision: bool = True if request.GET.get(
-            "use_last_revision").lower() == "true" else False#TODO: исправить кеш
+            "use_last_revision").lower() == "true" else False
         
         if not tag_id or not feature_id:
             err_text: str = "Does not exist tag_id" if not tag_id \
@@ -116,7 +96,7 @@ class UserBannerView(APIView):
                     safe=False,
                     status=400)
         
-        if 1:  # use_last_revision:
+        if use_last_revision:
             banner = models.Banner.objects.all()
         else:
             banners_data = json.loads(cache.get('banners'))
