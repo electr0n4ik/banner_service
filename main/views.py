@@ -43,7 +43,7 @@ class TokenCreateView(TokenObtainPairView):
                                     password=password_user)
                 if not user:
                     return Response({
-                        "detail": "Account not found"})
+                        "detail": "Неверный пароль!"})
                 refresh_token = AdminCustomToken if user.is_superuser \
                     else UserCustomToken
                 refresh = refresh_token.for_user(user)
