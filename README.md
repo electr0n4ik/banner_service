@@ -283,6 +283,12 @@ docker exec -ti banner_service_app flake8
 
 Поясняю, если use_last_revision=false, то созданные баннеры за последние 5 минут будут недоступны для всех, так как кеш обновляется каждые 5 минут.
 
+#### 8. Запуск тестов
+
+```shell
+docker exec -ti banner_service_app python test_views.py
+```
+
 ## CURLs
 
 **user_banner/**
