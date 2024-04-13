@@ -46,11 +46,6 @@ RESTART WITH 1")
                     
                     banner = Banner.objects.create(feature_id=random.randint(
                         1, 10**4), tag_ids=selected_tags)
-                    
-                    BannerVersion.objects.create(
-                        banner=banner,
-                        banner_body=banner.get_banner_data(),
-                        version_number=banner.current_version)
                     break
                 except IntegrityError:
                     pass
