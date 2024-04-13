@@ -1,7 +1,6 @@
 *.pyc
 __pycache
 .DS_Store
-.env
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -87,7 +86,6 @@ celerybeat-schedule
 *.sage.py
 
 # Environments
-.env
 .venv
 env/
 venv/

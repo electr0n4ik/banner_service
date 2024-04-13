@@ -17,9 +17,9 @@ app.autodiscover_tasks()
 #     scheduler.remove('run-every-5-minutes')
 
 app.conf.beat_schedule = {
-    'run-every-02-minutes': {
+    'run-every-5-minutes': {
         'task': 'main.tasks.my_periodic_task',
-        'schedule': timedelta(minutes=0.2),
+        'schedule': timedelta(minutes=5),
         'args': (),
     },
 }

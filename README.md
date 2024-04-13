@@ -42,6 +42,9 @@
   Фич лист проделанной работы:
     1. Кастомная команда - 
     python manage.py put_data --n_features=1000 --clear
+    sudo systemctl stop redis
+    docker exec -ti banner_service_app python manage.py put_data --n_features=1000 --clear
+
     2. Созданы модели;
     3. Созданы урлы;
     4. Созданы вьюшки;
@@ -51,8 +54,7 @@
 </p>
 
 Запустите Celery для выполнения периодических задач:
-celery -A main(config?) beat -l info
+celery -A config beat -l info
 
 Запуск рабочих процессов Celery для выполнения задач:
-celery -A main  worker --purge
-celery -A main  worker --loglevel=info
+celery -A config  worker --loglevel=info
