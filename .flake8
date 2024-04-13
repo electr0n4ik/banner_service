@@ -1,0 +1,24 @@
+[flake8]
+
+exclude = 
+    .git,
+    .venv,
+    __py,
+    __init__.py,
+    settings.py,
+    migrations
+
+max-line-length = 80
+
+ignore = 
+    W291,
+    W292,
+    W293,
+    E128,
+    E302,
+    E301,
+    E303,
+    E117,
+    E125,
+    E126,
+    E121,
