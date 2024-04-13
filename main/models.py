@@ -31,12 +31,12 @@ class Banner(models.Model):
             if self.pk is None:
                 super().save(*args, **kwargs)
             elif not version_rollback:
-                new_version_number = self.current_version + 1
+                
                 BannerVersion.objects.create(
                     banner=self,
                     banner_body=self.get_banner_data(),
-                    version_number=new_version_number)
-
+                    version_number=self.current_version)
+                new_version_number = self.current_version + 1
                 self.current_version = new_version_number
                 super().save(*args, **kwargs)
             else:
