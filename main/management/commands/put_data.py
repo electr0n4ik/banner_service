@@ -44,7 +44,7 @@ RESTART WITH 1")
                     total_tags += num_tags
                     selected_tags = random.sample(tag_ids_array, num_tags)
                     
-                    banner = Banner.objects.create(feature_id=random.randint(
+                    Banner.objects.create(feature_id=random.randint(
                         1, 10**4), tag_ids=selected_tags)
                     break
                 except IntegrityError:
